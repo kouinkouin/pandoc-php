@@ -175,16 +175,23 @@ class Pandoc
         file_put_contents($this->tmpFile, $content);
 
         $command = sprintf(
-            '%s --from=%s --to=%s %s',
+            '%s --from=%s --to=%s -o %s %s 2>&1',
             $this->executable,
             $from,
             $to,
+            $this->tmpFile.'.output',
             $this->tmpFile
         );
 
-        exec($command, $output);
+        exec($command, $output, $return);
 
-        return implode("\n", $output);
+        if ($return !== 0) {
+            throw new PandocException(
+                sprintf('Conversion failed - return: %s - output: %s', $return, $output)
+            );
+        }
+
+        return file_get_contents($this->tmpFile.'.output');
     }
 
     /**
